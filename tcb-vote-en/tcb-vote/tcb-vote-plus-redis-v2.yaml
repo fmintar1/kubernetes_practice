@@ -1,0 +1,92 @@
+#deployment block
+#responsible for deploying tcb vote backend pod inside kubernetes cluster
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcb-vote-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tcb-vote-back
+  template:
+    metadata:
+      labels:
+        app: tcb-vote-back
+    #spec(ification) is the place you're going to spend more time because this is where you're giving the information on how kubernetes run your container
+    spec:
+      #specify the name and who have the image for the name
+      containers:
+      - name: tcb-vote-back
+        image: thecloudbootcamp/redis:6.0.8
+        #environment allow to be connected without using the password
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        #expose the container port
+        ports:
+        - containerPort: 6379
+          name: redis
+          #end of deployment block
+---
+#service block
+#responsible for exposing this port to kubernetes cluster so the front end can talk to the back end
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcb-vote-back
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: tcb-vote-back
+    #end of service block
+---
+#another deployment block
+#responsible for deploying the front end (name: tcb-vote-front)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcb-vote-front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tcb-vote-front
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5 
+  template:
+    metadata:
+      labels:
+        app: tcb-vote-front
+    spec:
+      containers:
+      - name: tcb-vote-front
+        image: gcr.io/<PROJECT_ID>/tcb-vote-front:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 250m
+          limits:
+            cpu: 500m
+        env:
+        - name: REDIS
+          value: "tcb-vote-back"
+          #end of deployment block
+---
+#service block responsible for exposing port 80 of tcb-vote-front end of the application, exposing to http port so user can access the application over the internet
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcb-vote-front
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+  selector:
+    app: tcb-vote-front
+    #end of service block

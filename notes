@@ -1,0 +1,94 @@
+***Kubernetes or Kube or K8S***
+
+-The most popular container orchestrated system.
+-Created by Google to manage their internal applications.
+-Organized by 'Objects' (K8S components).
+-Deployment based on simple text file (yaml). <-- important interview question
+-Open source and supported by public cloud providers.
+
+***Use Cases***
+
+*Container Orchestrated in Microservices Architectures
+-K8S manages container and optimizes process.
+*Environments that require High Availability/Scalability
+-k8s allows you to scale applications quickly.
+*Fits to any type of cloud
+-public | private | hybrid | multicloud
+
+***How Will Kubernetes Help You On Your Career***
+
+-Kubernetes has been used from small startups to large enterprises.
+-Kubernetes is present and future of modern applications running in multicloud.
+-When it comes to container orchestrators, kubernetes is the most popular
+-Kubernetes is critical for companies running applications in the cloud
+
+***How Does Kubernetes Work***
+
+-Start with nodes, a place to run the containers.
+-Then cluster, which is a set of nodes. If a node fails, the applications should survive.
+-Then cluster K8S, which has a few different nodes. Master nodes in charge of managing the cluster and Worker nodes in charge of running the applications.
+
+***High Level Architecture***
+
+-In cluster K8S, master nodes is the control plane of the K8S cluster. It has API server, controller, scheduler, and etcd.
+-API server -> component of Kubernetes control plane that exposes Kubernetes API.
+-Controller -> responsible for noticing and responding when nodes go down.
+-Scheduler -> looks for newly created parts (smallest units) that's going to run the application.
+-Etcd -> consistent highly scalable key-value store used for kubernetes database to store all cluster data.
+
+-In cluster K8S, worker nodes is the nodes that will run your application. It has container runtime, pad, and container runtime.
+-Container runtime -> responsible for running the containers
+-Kubelet -> agent to make sure every container is running in a patch, make sure everything is good.
+-Pad -> group of one or more containers with network resources and specifications on how to run the container (which container image should be used to run that given container).
+
+***Hands On With Kubernetes On Cloud***
+
+-VSC -> deployment file (yaml) -> zip file -> $ gcloud builds & $ kubectl apply -> container registry inside Google Cloud -> (once Kubernetes cluster is created) -> start provisioning process of the application 
+
+Inside Google Cloud
+-Create Kubernetes cluster
+
+***files***
+-dockerfile -> docker image building process is going to use to create the image for the tcb vote frontend
+-inside tcb-vote has application source code (__pycache__,static,templates)
+-tcb-vote-plus-redis-v2.yaml -> kubernetes deployment file to kubernetes cluster
+
+***In Google Cloud***
+-upload the whole zip folder to google cloudshell
+-unzip the zip file
+-go to the folder
+-gcloud config set project (project ID)
+ -project ID can be found by clicking my First Project and just copy/paste the right ID
+-authorize
+-next is to make sure you're in the right folder
+ -the right folder usually consist dockerfile and .yaml file
+-enable cloud build API
+ -gcloud services enable cloudbuild.googleapis.com --project (project ID)
+ -gcloud builds submit --tag gcr.io/PROJECT_ID/tcb-vote-front
+  1. Run a docker build to build a docker image with application files
+  2. Do docker push and upload that image and set container registry automatically
+ -if STATUS = SUCCESS, good
+-to check if it's working, go to container registry and the container should be there
+-change PROJECT ID inside deployment file
+ -vi the-name-of-yaml-file.yaml
+ -replace <PROJECT_ID> in the image inside spec with the name of the project ID
+-to deploy, search kubernetes clusters & create your cluster
+-preparation steps:
+ -click on cluster name
+ -connect button
+ -copy command line instructions
+ -check if you get authenticated by the cluster by the command kubectl get nodes
+ -kubectl is communicating with the API server inside the control plane
+ -to deploy, run command kubectl apply -f name-of-yaml-file.yaml
+    -Google will charge you when you create pods inside the cluster
+    -In standard mode, google will charge you whether you have pods running or not
+ -any updates are stored in the memory database, so anytime the program is being run, it will persist with the update
+-whenever there's a high demand on your application, Kubernetes is going to increase the number of pods/replicas of the given pods to fulfill the demand of the users and making sure that the application can scale
+ -kubectl get pods -> check on the pods
+ -kubectl get deployment tcb-vote-front -> check on the deployment
+ -kubectl autoscale deployment tcb-vote-front --cpu-percent=50 --min=1 --max=10 -> enable the outer scaling for the service, --cpu-percent=50 -> trigger that is used to scale out deployment, matrix to be used so Kubernetes understood to add more pods when it goes above 50%, --min=1 -> outer scale will always be 1 pod, --max=10 -> outer scale max is 10 pods
+ -to check if it's working, kubectl get hpa
+ -to run a simulation generator, run the following query as an example:
+ $ kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://tcb-vote-front; done"
+
+ -Warning: Autopilot set default resource requests for Pod default/load-generator, as resource requests were not specified. See http://g.co/gke/autopilot-defaults -> warning for the lack of resources available inside the cluster
